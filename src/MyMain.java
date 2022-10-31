@@ -1,132 +1,80 @@
-import java.awt.EventQueue;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
-
-import javax.swing.JFileChooser;
-import javax.swing.JPanel;
-import javax.swing.filechooser.FileSystemView;
+import java.util.Stack;
 
 public class MyMain {
 
-	private JFrame frame;
-	private static JButton inputBtn;
-    private static JButton outputBtn;
-    private static JButton computeBtn;
-    private static JFrame jframeWindow;
-    private static JPanel panel;
-    private static File fileToRead;
-    private static File fileToSave;
-    
 	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					MyMain window = new MyMain();
-					window.frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+		File inputFile;
+		Scanner fileInputScan = null;
+		try {
+			inputFile = new File("C:/Users/malac/Desktop/java/MyClass.java");
+			fileInputScan = new Scanner(inputFile);
+			ArrayList<String> listMCS = collectMCS(fileInputScan);
+			int listcount = collectcount(fileInputScan);
+			String MCSString = "";
+			System.out.println("This is the number of line in this code: "+listcount);
+			for (int i = 0; i < listMCS.size(); i++) {
+				MCSString += listMCS.get(i) + "\n";
 			}
-		});
+			System.out.println("The are the method in the code "+MCSString);
+		} catch (FileNotFoundException e) {
+			System.out.println("Error - This file could not be found.");
+		} finally {
+			if (fileInputScan != null) {
+				fileInputScan.close();
+			}
+		}
 	}
 
-	public MyMain() {
-		initialize();
-		constructAppWindow();
-		addListenerEvents();
+	public static ArrayList<String> collectMCS(Scanner fileInputScan) {
+		Stack<String> stack = new Stack<String>();
+		ArrayList<String> arrayList = new ArrayList<String>();
+		String codeLine = "";
+		String possibleMCS = "";
+
+		while (fileInputScan.hasNextLine()) {
+			codeLine = fileInputScan.nextLine();
+			codeLine = codeLine.trim();
+			if (isCode(codeLine)) {
+				if (!codeLine.equals("{") && !codeLine.equals("}")) {
+					possibleMCS = codeLine;
+				} else if (codeLine.equals("{")) {
+					stack.push(possibleMCS);
+					stack.toString();
+				} else {
+					arrayList.add(0, stack.pop());
+				}
+			}
+		}
+		return arrayList;
 	}
 	
-	private static void constructAppWindow() {
-        jframeWindow = new JFrame();
-        jframeWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        panel = new JPanel(new GridLayout(3, 0));
-        panel.setPreferredSize(new Dimension(500, 150));
-        panel.setBackground(Color.DARK_GRAY);
-        inputBtn = new JButton("Specify Input Text File");
-        outputBtn = new JButton("Specify Output Text File");
-        computeBtn = new JButton("Perform Work");
-        panel.add(inputBtn);
-        panel.add(outputBtn);
-        panel.add(computeBtn);
-        jframeWindow.add(panel);
-        jframeWindow.pack();
-        jframeWindow.setVisible(true);
-    }
-    
-    private static void addListenerEvents() {
-        inputBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                requestInputFile();
-            }
-        });
-        outputBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                requestSaveFile();
-            }
-        });
-        computeBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                computeSomething();
-            }
-        });
-        
-    }
+	public static int collectcount(Scanner fileInputScan) {
+		int x=0;
+		String codeLine = "";
+		String possibleMCS = "";
 
-    public static void requestSaveFile() {
-        JFrame parentFrame = new JFrame();
-
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Specify a file to save");
-        int userSelection = fileChooser.showSaveDialog(parentFrame);
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            fileToSave = fileChooser.getSelectedFile();
-            System.out.println("Save as file: " + fileToSave.getAbsolutePath());
-        }
-    }
-
-    public static void requestInputFile() {
-    	Numbers num=new Numbers();
-        JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        int returnValue = jfc.showOpenDialog(null);
-        if (returnValue == JFileChooser.APPROVE_OPTION) {
-            fileToRead = jfc.getSelectedFile();
-            System.out.println(fileToRead.getAbsolutePath());
-			try {
-				Scanner myReader = new Scanner(fileToRead);
-				while (myReader.hasNextLine()) {
-					String data = myReader.nextLine();
-					String[]list=data.split(" ");
-					for(int i=0; i<list.length; i++) {
-						num.push(Integer.parseInt(list[i]));
-					}
-					System.out.println(num.Mean());
-					System.out.println(num.stdev());
+		while (fileInputScan.hasNextLine()) {
+			codeLine = fileInputScan.nextLine();
+			codeLine = codeLine.trim();
+			if (isCode(codeLine)) {
+				if (!codeLine.equals("//")) {
+					possibleMCS = codeLine;
 				}
-				myReader.close();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
+				else {
+					x++;
+				}
 			}
-			
-        }
-    }
-    
-    public static void computeSomething() {
-        System.out.println("now computing");
-    }
+		}
+		return x;
+	}
 
-	private void initialize() {
-		frame = new JFrame();
-		frame.setBounds(100, 100, 450, 300);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	public static boolean isCode(String str) {
+		return str.length() > 0;
 	}
 
 }
+
